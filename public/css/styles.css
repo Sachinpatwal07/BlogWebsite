@@ -11,6 +11,7 @@
   margin-bottom: 0;
   font-size: 12px;
   letter-spacing: 5px;
+  font-weight: bold;
 }
 
 .navbar-nav li a:hover {

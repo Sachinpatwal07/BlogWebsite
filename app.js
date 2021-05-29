@@ -5,12 +5,31 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ = require("lodash");
 const ellipsis = require('text-ellipsis');
+const mongoose = require('mongoose');
 
-const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
-const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
-const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
+const homeStartingContent = "Think blogging's just a hobby ? Think again – it can actually make you quite good money. Here's how to get started, find your niche and turn your blog into a nice little money earner. We'll be honest: blogging isn't the easiest way to make money. But, the great thing is that anyone can do it, and it looks amazing on your CV. All you need is something interesting to say and enough patience and dedication to build traffic and a following. But how do successful bloggers make their money ? We've interviewed a couple of them to reveal their monetisation secrets.";
 
 const app = express();
+
+
+
+mongoose.connect('mongodb+srv://sachinpatwal07:nikeemessi10@cluster0.ov8aw.mongodb.net/todolistDB', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+
+const blogSchema = new mongoose.Schema({
+
+  title: {
+    type: String,
+    require: ["true", "title  is must required"]
+  },
+  body: String
+
+})
+
+const Blog = mongoose.model("Blog", blogSchema);
 
 
 app.set('view engine', 'ejs');
@@ -20,70 +39,63 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(express.static("public"));
 
-let posts = [];
+
 
 app.get("/", function(req, res) {
 
-  res.render("home", {
-    startingContent: homeStartingContent,
-    posts: posts
-  });
+  Blog.find({}, function(err, foundList) {
+
+
+    if (!err)
+      res.render("home", {
+        startingContent: homeStartingContent,
+        posts: foundList
+      });
+
+
+
+  })
+
+
 
 
 });
 
 
-app.get("/about", function(req, res) {
-
-  res.render("about", {
-    aboutContent: aboutContent
-  });
-
-});
-
-app.get("/contact", function(req, res) {
-
-  res.render("contact", {
-    contactContent: contactContent
-  });
-});
 
 app.get("/compose", function(req, res) {
 
   res.render("compose");
 
 
+
 });
 
 
-app.get("/posts/:par_name", function(req, res) {
+app.get("/posts/:par_id", function(req, res) {
 
 
 
+  const requireId = req.params.par_id;
 
+  Blog.findOne({
+    _id: requireId
+  }, (err, post) => {
 
-
-  const requireTitle = _.lowerCase(req.params.par_name);
-
-
-  posts.forEach(function(post) {
-
-    const storetitle = _.lowerCase(post.title);
-
-    if (storetitle === requireTitle)
+    if (!err)
       res.render("post", {
         title: post.title,
-        content: post.content
-      });
-
-  });
+        content: post.body
+      })
 
 
 
 
 
-});
+  })
 
+
+})
 
 
 
@@ -91,26 +103,26 @@ app.post("/compose", function(req, res) {
 
 
 
-  const post = {
+  const post = new Blog({
 
     title: req.body.postTitle,
-    content: req.body.postBody
+    body: req.body.postBody
 
-  }
-  posts.push(post);
+  })
+
+  post.save((err)=>{
+
+  if(!err)
   res.redirect("/");
+
+
+  });
+
 
 
 });
 
 
-
-
-
-
-
-
-
-app.listen(process.env.PORT||3000, function() {
-  console.log("Server started on port 3000");
+app.listen(process.env.PORT || 3000, function() {
+  console.log("Server Started ");
 });
